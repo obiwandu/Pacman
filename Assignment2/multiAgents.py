@@ -11,8 +11,14 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import traceback
 
 from game import Agent
+
+def PrintCallStack():
+    print "*callstack:"
+    for line in traceback.format_stack():
+        print line.strip()
 
 class ReflexAgent(Agent):
     """
@@ -69,8 +75,39 @@ class ReflexAgent(Agent):
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        "*** Modified by Du Tianyi 3035149685 ***"
+        #PrintCallStack()
+        ghostPos = successorGameState.getGhostPositions()
+        score = successorGameState.getScore()
+        distGhost = []
+        for pos in ghostPos:
+            distGhost.append(manhattanDistance(newPos, pos))
+        distFood = []
+        numFood = 0
+        for x in range(newFood.width):
+            for y in range(newFood.height):
+                if newFood[x][y]:
+                    distFood.append(manhattanDistance(newPos, (x,y)))
+                    numFood += 1
+        # print "distFood", distFood
+        # print "distGhost", distGhost
+        """
+        euclidian dist of nearest food & ghost
+        """
+        # print "***cur action:", action
+        # print "init score:", score
+        if len(distFood):
+            if min(distGhost) >= 3:
+                score += (newFood.width * newFood.height - numFood)*3 + newFood.width + newFood.height - min(distFood)
+            else:
+                score += min(distGhost)
+            # print "distGhost >= 3:", (newFood.width * newFood.height - numFood)*2 + newFood.width + newFood.height - min(distFood),"eat food:",(newFood.width * newFood.height - numFood)*2,"get close:",newFood.width + newFood.height - min(distFood)
+            # print "distGhost < 3:", min(distGhost)
+            # print "final score:", score
+        else:
+            score += (newFood.width * newFood.height - numFood)*3 + newFood.width + newFood.height
+        return score
+        #return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
