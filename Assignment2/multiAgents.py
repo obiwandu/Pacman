@@ -138,11 +138,63 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        """added"""
+        self.numActor = 0
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
+
+    def minVal(self, gameState, curDepth, preActor):
+        curActor = (preActor + 1) % self.numActor
+
+        if curDepth == self.depth + 1:
+            #print "min end", "dep", curDepth, "actor", curActor, "utility", self.evaluationFunction(gameState)
+            return [self.evaluationFunction(gameState), 0]
+        vals = []
+        actions = gameState.getLegalActions(curActor)
+        #print "min", "dep", curDepth, "actor", curActor, "actions", actions
+        if actions:
+            for act in gameState.getLegalActions(curActor):
+                succ = gameState.generateSuccessor(curActor, act)
+                if curActor == self.numActor - 1:
+                    utility = self.maxVal(succ, curDepth, curActor)
+                    if utility:
+                        vals.append([utility[0], act])
+                else:
+                    utility = self.minVal(succ, curDepth, curActor)
+                    if utility:
+                        vals.append([utility[0], act])
+        else:
+            return [self.evaluationFunction(gameState), 0]
+        if vals:
+            return min(vals, key = lambda x: x[0])
+        else:
+            return []
+
+    def maxVal(self, gameState, curDepth, preActor):
+        curActor = 0
+        curDepth += 1
+
+        if curDepth == self.depth + 1:
+            #print "max end", "dep", curDepth, "actor", curActor, "utility", self.evaluationFunction(gameState)
+            return [self.evaluationFunction(gameState), 0]
+        vals = []
+        actions = gameState.getLegalActions(curActor)
+        #print "max", "dep", curDepth, "actor", curActor, "actions", actions
+        if actions:
+            for act in actions:
+                succ = gameState.generateSuccessor(curActor, act)
+                utility = self.minVal(succ, curDepth, curActor)
+                if utility:
+                    vals.append([utility[0], act])
+        else:
+            return [self.evaluationFunction(gameState), 0]
+        if vals:
+            return max(vals, key = lambda x: x[0])
+        else:
+            return []
 
     def getAction(self, gameState):
         """
@@ -161,8 +213,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "*** Modified by Du Tianyi 3035149685 ***"
+        self.numActor = gameState.getNumAgents()
+
+        actions = gameState.getLegalActions(0)
+        utility = self.maxVal(gameState, 0, 0)
+        return utility[1]
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
