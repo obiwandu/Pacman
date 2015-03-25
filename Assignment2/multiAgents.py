@@ -12,6 +12,7 @@ from util import manhattanDistance
 from game import Directions
 import random, util
 import traceback
+import sys
 
 from game import Agent
 
@@ -160,18 +161,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 succ = gameState.generateSuccessor(curActor, act)
                 if curActor == self.numActor - 1:
                     utility = self.maxVal(succ, curDepth, curActor)
-                    if utility:
-                        vals.append([utility[0], act])
+                    vals.append([utility[0], act])
                 else:
                     utility = self.minVal(succ, curDepth, curActor)
-                    if utility:
-                        vals.append([utility[0], act])
+                    vals.append([utility[0], act])
         else:
             return [self.evaluationFunction(gameState), 0]
-        if vals:
-            return min(vals, key = lambda x: x[0])
-        else:
-            return []
+        return min(vals, key = lambda x: x[0])
 
     def maxVal(self, gameState, curDepth, preActor):
         curActor = 0
@@ -187,14 +183,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
             for act in actions:
                 succ = gameState.generateSuccessor(curActor, act)
                 utility = self.minVal(succ, curDepth, curActor)
-                if utility:
-                    vals.append([utility[0], act])
+                vals.append([utility[0], act])
         else:
             return [self.evaluationFunction(gameState), 0]
-        if vals:
-            return max(vals, key = lambda x: x[0])
-        else:
-            return []
+        return max(vals, key = lambda x: x[0])
 
     def getAction(self, gameState):
         """
@@ -226,12 +218,67 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def minVal(self, gameState, curDepth, preActor, alpha, beta):
+        curActor = (preActor + 1) % self.numActor
+        v = sys.maxsize
+
+        if curDepth == self.depth + 1:
+            #print "min end", "dep", curDepth, "actor", curActor, "utility", self.evaluationFunction(gameState)
+            return [self.evaluationFunction(gameState), 0]
+        vals = []
+        actions = gameState.getLegalActions(curActor)
+        #print "min", "dep", curDepth, "actor", curActor, "actions", actions
+        if actions:
+            for act in gameState.getLegalActions(curActor):
+                succ = gameState.generateSuccessor(curActor, act)
+                if curActor == self.numActor - 1:
+                    utility = self.maxVal(succ, curDepth, curActor, alpha, beta)
+                    vals.append([utility[0], act])
+                else:
+                    utility = self.minVal(succ, curDepth, curActor, alpha, beta)
+                    vals.append([utility[0], act])
+                v = min(v, utility[0])
+                if v < alpha:
+                    return [v, act]
+                beta = min(beta, v)
+        else:
+            return [self.evaluationFunction(gameState), 0]
+        return min(vals, key = lambda x: x[0])
+
+    def maxVal(self, gameState, curDepth, preActor, alpha, beta):
+        curActor = 0
+        curDepth += 1
+        v = - sys.maxsize - 1
+
+        if curDepth == self.depth + 1:
+            #print "max end", "dep", curDepth, "actor", curActor, "utility", self.evaluationFunction(gameState)
+            return [self.evaluationFunction(gameState), 0]
+        vals = []
+        actions = gameState.getLegalActions(curActor)
+        #print "max", "dep", curDepth, "actor", curActor, "actions", actions
+        if actions:
+            for act in actions:
+                succ = gameState.generateSuccessor(curActor, act)
+                utility = self.minVal(succ, curDepth, curActor, alpha, beta)
+                vals.append([utility[0], act])
+                v = max(v, utility[0])
+                if v > beta:
+                    return [v, act]
+                alpha = max(alpha, v)
+        else:
+            return [self.evaluationFunction(gameState), 0]
+        return max(vals, key = lambda x: x[0])
+
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "*** Modified by Du Tianyi 3035149685 ***"
+        self.numActor = gameState.getNumAgents()
+
+        actions = gameState.getLegalActions(0)
+        utility = self.maxVal(gameState, 0, 0, - sys.maxsize - 1, sys.maxsize)
+        return utility[1]
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
